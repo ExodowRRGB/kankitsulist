@@ -19,7 +19,7 @@ void getlist(){
 	httpcAddRequestHeaderField(&context, "Content-Type", "application/json");
 	httpcAddRequestHeaderField(&context, "Accept", "application/json");
 	httpcSetSSLOpt(&context, SSLCOPT_DisableVerify);
-	const char *body = "{\"query\": \"query ($page: Int = 2) { Page(page: $page) { pageInfo { hasNextPage } media(type: ANIME, format: TV, startDate_greater: 20200000, startDate_lesser: 20210000) { id title { romaji } } } }\"}";
+	const char *body = "{\"query\": \"query ($id: Int) {Media (id: $id, type: ANIME) {id title {romaji english native}}}", "variables": {"id": 5081}}\"}";
 	httpcAddPostDataRaw(&context, (u32 *)body, strlen(body));
 	ret = httpcBeginRequest(&context);
 	if (R_FAILED(ret)) {
