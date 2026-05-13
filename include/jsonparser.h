@@ -1,3 +1,4 @@
+//warning this code is vibe coded
 #ifndef JSONPARSER_H
 #define JSONPARSER_H
 

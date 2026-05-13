@@ -1,3 +1,5 @@
+//warning this code is vibe coded
+
 #include "jsonparser.h"
 
 #include <stdlib.h>
