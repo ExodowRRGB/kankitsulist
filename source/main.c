@@ -5,7 +5,7 @@
 
 char *reqretrun;
 
-void getlist(){
+void getlist(char* *response){
 	httpcInit(0);
 	printf("httpc initialized!\n");
 	httpcContext context;
@@ -36,7 +36,8 @@ void getlist(){
 	while (dlret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING) {
     	dlret = httpcDownloadData(&context, buffer + readSize, 0x100000 - readSize, &readSize);
 	}
-	reqretrun = (char *)buffer;
+	*response = (char *)buffer;
+	//reqretrun = (char *)buffer;
 	free(buffer);
 	httpcCloseContext(&context);
 	httpcExit();
@@ -46,7 +47,7 @@ void getlist(){
 int main() {
 	gfxInitDefault();
 	consoleInit(GFX_TOP, NULL);
-	getlist();
+	getlist(&reqretrun);
 	printf("%s\n", reqretrun);
 	printf("Press START to exit.\n");
 	while (aptMainLoop()) {
