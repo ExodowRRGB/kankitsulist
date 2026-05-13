@@ -22,7 +22,13 @@
         };
       in
       {
-        devShells.default = pkgs.mkShell.override { stdenv = pkgs.devkitNix.stdenvARM; } { };
+        devShells.default = pkgs.mkShell.override { stdenv = pkgs.devkitNix.stdenvARM; } {
+            buildInputs = with pkgs; [
+    git
+    cjson
+    pkg-config
+  ];
+         };
         packages.default = pkgs.devkitNix.stdenvARM.mkDerivation {
           name = "devkitARM-3DS";
           src = ./.;

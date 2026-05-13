@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "jsonparser.h"
 
-char *reqretrun;
 
 void getlist(char* *response){
 	httpcInit(0);
@@ -44,11 +44,24 @@ void getlist(char* *response){
 }
 
 
+
+
+
+
+
 int main() {
+	char *reqretrun;
+
 	gfxInitDefault();
 	consoleInit(GFX_TOP, NULL);
 	getlist(&reqretrun);
+	char *out = NULL;
 	printf("%s\n", reqretrun);
+
+	parasejson(reqretrun, &out, "data.Media.title.romaji");
+	printf("%s\n", out);
+	
+	//printf("%s\n", reqretrun);
 	printf("Press START to exit.\n");
 	while (aptMainLoop()) {
 	hidScanInput();
