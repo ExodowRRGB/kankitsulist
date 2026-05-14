@@ -3,63 +3,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jsonparser.h"
-
-
-void getlist(char* *response){
-	httpcInit(0);
-	printf("httpc initialized!\n");
-	httpcContext context;
-	Result ret = httpcOpenContext(&context, HTTPC_METHOD_POST, "https://graphql.anilist.co/", 1);
-	if (R_FAILED(ret)) {
-		printf("Failed to open context: 0x%08lX\n", ret);
-	} else {
-		printf("Context opened!\n");
-		
-	}
-	httpcAddRequestHeaderField(&context, "Content-Type", "application/json");
-	httpcAddRequestHeaderField(&context, "Accept", "application/json");
-	httpcSetSSLOpt(&context, SSLCOPT_DisableVerify);
-	const char *body = "{\"query\": \"query ($id: Int) {Media (id: $id, type: ANIME) {id title {romaji english native}}}\", \"variables\": {\"id\": 5081}}";
-	httpcAddPostDataRaw(&context, (u32 *)body, strlen(body));
-	ret = httpcBeginRequest(&context);
-	if (R_FAILED(ret)) {
-		printf("Request failed: 0x%08lX\n", ret);
-	httpcCloseContext(&context);
-	}
-	u32 statusCode = 0;
-	httpcGetResponseStatusCode(&context, &statusCode);
-	printf("Status: %lu\n", statusCode);
-	u8 *buffer = malloc(0x100000);
-	memset(buffer, 0, 0x100000);
-	u32 readSize = 0;
-	Result dlret = HTTPC_RESULTCODE_DOWNLOADPENDING;
-	while (dlret == (s32)HTTPC_RESULTCODE_DOWNLOADPENDING) {
-    	dlret = httpcDownloadData(&context, buffer + readSize, 0x100000 - readSize, &readSize);
-	}
-	*response = (char *)buffer;
-	//reqretrun = (char *)buffer;
-	free(buffer);
-	httpcCloseContext(&context);
-	httpcExit();
-}
-
-
-
-
+#include "httprequester.h"
 
 
 
 int main() {
 	char *reqretrun;
+	char **items = NULL;
+	int count = 0;
+
 
 	gfxInitDefault();
 	consoleInit(GFX_TOP, NULL);
 	getlist(&reqretrun);
 	char *out = NULL;
-	printf("%s\n", reqretrun);
+	//printf("%s\n", reqretrun);
 
-	parasejson(reqretrun, &out, "data.Media.title.romaji");
-	printf("%s\n", out);
+	//parasejson(reqretrun, &out, "data.MediaListCollection.lists");
+//printf("%s\n", out);
+
+printf("Watching LIST\n");
+paraselistjson(reqretrun, &items, &count, "data.MediaListCollection.lists.entries");
+printf("Total = %d\n", count);
+//printf("%s\n", items[0]);
+for (int i = 0;i < count;i++){
+parasejson(items[i], &out, "media.title.romaji");
+printf("%s\n", out);
+
+}
+
+
+
+
+/*	for (int i = 0; i < count; ++i) {
+    printf("[%d] %s\n", i, items[i]);
+    free(items[i]);
+}*/
+	//printf("%s\n", out);
 	
 	//printf("%s\n", reqretrun);
 	printf("Press START to exit.\n");
@@ -73,3 +53,5 @@ int main() {
 	gfxExit();
 	return 0;
 }
+
+

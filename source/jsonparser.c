@@ -6,14 +6,11 @@
 #include <string.h>
 #include <stdio.h>
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Bounded cursor — all reads are guarded by [p, end).
- * ───────────────────────────────────────────────────────────────────────── */
 typedef struct { const char *p; const char *end; } Cursor;
 
 static int    cur_ok  (Cursor c) { return c.p < c.end; }
 static char   cur_ch  (Cursor c) { return cur_ok(c) ? *c.p : '\0'; }
-static Cursor cur_adv (Cursor c) { if (cur_ok(c)) c.p++; return c; }   /* bounded */
+static Cursor cur_adv (Cursor c) { if (cur_ok(c)) c.p++; return c; }
 
 static Cursor skip_ws(Cursor c) {
     while (cur_ok(c)) {
@@ -24,22 +21,17 @@ static Cursor skip_ws(Cursor c) {
     return c;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Skippers — advance past a complete JSON value of each type.
- * ───────────────────────────────────────────────────────────────────────── */
 static Cursor skip_value(Cursor c);
 
-/* c must point at the opening '"' */
 static Cursor skip_string(Cursor c) {
-    c = cur_adv(c);                        /* consume opening '"' */
+    c = cur_adv(c);
     while (cur_ok(c) && cur_ch(c) != '"') {
-        if (cur_ch(c) == '\\') c = cur_adv(c);   /* skip escape prefix */
+        if (cur_ch(c) == '\\') c = cur_adv(c);
         c = cur_adv(c);
     }
-    return cur_adv(c);                     /* consume closing '"' */
+    return cur_adv(c);
 }
 
-/* c must point at '{' */
 static Cursor skip_object(Cursor c) {
     c = cur_adv(c);
     c = skip_ws(c);
@@ -59,7 +51,6 @@ static Cursor skip_object(Cursor c) {
     return c;
 }
 
-/* c must point at '[' */
 static Cursor skip_array(Cursor c) {
     c = cur_adv(c);
     c = skip_ws(c);
@@ -95,39 +86,24 @@ static Cursor skip_value(Cursor c) {
     }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
- * find_key()
- * Walk the JSON object at c and return a cursor pointing at the *value*
- * associated with `key` (byte-length `klen`).
- * Returns {NULL, end} if not found or if c is not at an object.
- * ───────────────────────────────────────────────────────────────────────── */
 static Cursor find_key(Cursor c, const char *key, size_t klen) {
     const Cursor not_found = { NULL, c.end };
-
     c = skip_ws(c);
     if (cur_ch(c) != '{') return not_found;
     c = cur_adv(c);
-
     while (cur_ok(c)) {
         c = skip_ws(c);
-
         if (cur_ch(c) == '}') return not_found;
-        if (cur_ch(c) != '"') return not_found;    /* malformed */
-
-        const char *key_start = c.p + 1;           /* byte after opening '"' */
+        if (cur_ch(c) != '"') return not_found;
+        const char *key_start = c.p + 1;
         c = skip_string(c);
-        /* after skip_string, c.p is one past the closing '"' */
         size_t key_len = (size_t)(c.p - 1 - key_start);
-
         c = skip_ws(c);
         if (cur_ch(c) != ':') return not_found;
         c = cur_adv(c);
         c = skip_ws(c);
-
-        /* key match — return cursor pointing at the value */
         if (key_len == klen && memcmp(key_start, key, klen) == 0)
             return c;
-
         c = skip_value(c);
         c = skip_ws(c);
         if (cur_ch(c) == ',') { c = cur_adv(c); continue; }
@@ -136,18 +112,10 @@ static Cursor find_key(Cursor c, const char *key, size_t klen) {
     return not_found;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Extractors
- * ───────────────────────────────────────────────────────────────────────── */
-
-/* Decode a JSON string, handling backslash escapes.
- * \uXXXX is passed through verbatim as 6 ASCII bytes. */
 static char *extract_string(Cursor c) {
     c = skip_ws(c);
     if (cur_ch(c) != '"') return NULL;
     c = cur_adv(c);
-
-    /* Pass 1: measure decoded length */
     size_t len = 0;
     Cursor scan = c;
     while (cur_ok(scan) && cur_ch(scan) != '"') {
@@ -160,11 +128,8 @@ static char *extract_string(Cursor c) {
         } else { len++; }
         scan = cur_adv(scan);
     }
-
     char *out = malloc(len + 1);
     if (!out) return NULL;
-
-    /* Pass 2: decode */
     size_t i = 0;
     while (cur_ok(c) && cur_ch(c) != '"') {
         if (cur_ch(c) == '\\') {
@@ -193,14 +158,12 @@ static char *extract_string(Cursor c) {
     return out;
 }
 
-/* Copy a number, boolean, or null verbatim. */
 static char *extract_primitive(Cursor c) {
     c = skip_ws(c);
     const char *start = c.p;
     c = skip_primitive(c);
     size_t len = (size_t)(c.p - start);
     if (len == 0) return NULL;
-
     char *out = malloc(len + 1);
     if (!out) return NULL;
     memcpy(out, start, len);
@@ -208,61 +171,121 @@ static char *extract_primitive(Cursor c) {
     return out;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
- * Public API
- * ───────────────────────────────────────────────────────────────────────── */
+static char *extract_raw(Cursor c) {
+    c = skip_ws(c);
+    const char *start = c.p;
+    c = skip_value(c);
+    size_t len = (size_t)(c.p - start);
+    if (len == 0) return NULL;
+    char *out = malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, start, len);
+    out[len] = '\0';
+    return out;
+}
+
+/* ── StrVec ── */
+typedef struct { char **data; int len, cap, oom; } StrVec;
+static void sv_init(StrVec *v) { v->data=NULL; v->len=v->cap=v->oom=0; }
+static void sv_push(StrVec *v, char *s) {
+    if (v->oom) { free(s); return; }
+    if (v->len >= v->cap) {
+        int nc = v->cap ? v->cap*2 : 16;
+        char **t = realloc(v->data, (size_t)nc * sizeof(char *));
+        if (!t) { v->oom=1; free(s); return; }
+        v->data=t; v->cap=nc;
+    }
+    v->data[v->len++] = s;
+}
+static void sv_free(StrVec *v) {
+    for (int i=0; i<v->len; i++) free(v->data[i]);
+    free(v->data); sv_init(v);
+}
+
+/* ── nav_collect / foreach_elem ── */
+static void nav_collect(Cursor c, const char *seg, StrVec *out);
+
+static void foreach_elem(Cursor c, const char *seg, StrVec *out) {
+    c = skip_ws(c);
+    if (cur_ch(c) != '[') return;
+    c = cur_adv(c);
+    c = skip_ws(c);
+    if (cur_ch(c) == ']') return;
+    while (cur_ok(c)) {
+        c = skip_ws(c);
+        if (cur_ch(c) == ']') break;
+        nav_collect(c, seg, out);
+        if (out->oom) return;
+        c = skip_value(c);
+        c = skip_ws(c);
+        if (cur_ch(c) == ',') { c = cur_adv(c); continue; }
+        if (cur_ch(c) == ']') break;
+        break;
+    }
+}
+
+static void nav_collect(Cursor c, const char *seg, StrVec *out) {
+    c = skip_ws(c);
+    if (!cur_ok(c) || out->oom) return;
+    if (!seg || seg[0] == '\0') {
+        if (cur_ch(c) == '[') foreach_elem(c, "", out);
+        else { char *r = extract_raw(c); if (r) sv_push(out, r); }
+        return;
+    }
+    const char *seg_end = seg;
+    while (*seg_end && *seg_end != '.') seg_end++;
+    size_t      seg_len = (size_t)(seg_end - seg);
+    const char *rest    = (*seg_end == '.') ? seg_end+1 : seg_end;
+    if (cur_ch(c) == '[') { foreach_elem(c, seg, out); return; }
+    if (cur_ch(c) != '{') return;
+    Cursor val = find_key(c, seg, seg_len);
+    if (!val.p) return;
+    nav_collect(val, rest, out);
+}
+
+/* ── Public API ── */
 
 void parasejson(const char *input, char **output, const char *element) {
     if (!input || !output || !element) return;
     *output = NULL;
 
-    /* ── 1. Locate the first '{', capped at 1 MiB ── */
     const char *p   = input;
-    const char *cap = input + 0x100000;
-    while (p < cap && *p != '{') p++;
-    if (p >= cap) {
-        fprintf(stderr, "parasejson: no '{' found within 1 MiB\n");
-        return;
-    }
+    const char *end = input + strlen(input);
+    while (p < end && *p != '{') p++;
+    if (p >= end) return;
 
-    /* ── 2. Build a bounded cursor over the whole remaining window ──
-       We use `cap` rather than trying to find the exact closing '}':
-       every inner skipper is bounded, so we can never over-read.     */
-    Cursor c = { p, cap };
-
-    /* ── 3. Walk the dot-separated path without strtok ──
-       We tokenise manually so there is no shared mutable state and
-       no dependency on strtok_r availability.                        */
-    const char *seg     = element;
+    Cursor c = { p, end };
+    const char *seg = element;
     const char *seg_end;
 
     while (*seg) {
         seg_end = seg;
         while (*seg_end && *seg_end != '.') seg_end++;
-
         size_t seg_len = (size_t)(seg_end - seg);
-        if (seg_len == 0) {
-            seg = (*seg_end == '.') ? seg_end + 1 : seg_end;
-            continue;
-        }
-
-        if (cur_ch(c) != '{') {
-            fprintf(stderr, "parasejson: expected object at key '%.*s'\n",
-                    (int)seg_len, seg);
-            return;
-        }
-
+        if (seg_len == 0) { seg = (*seg_end=='.') ? seg_end+1 : seg_end; continue; }
+        if (cur_ch(c) != '{') return;
         c = find_key(c, seg, seg_len);
-        if (!c.p) {
-            fprintf(stderr, "parasejson: key '%.*s' not found\n",
-                    (int)seg_len, seg);
-            return;
-        }
+        if (!c.p) return;
         c = skip_ws(c);
-
-        seg = (*seg_end == '.') ? seg_end + 1 : seg_end;
+        seg = (*seg_end == '.') ? seg_end+1 : seg_end;
     }
 
-    /* ── 4. Extract the final value ── */
     *output = (cur_ch(c) == '"') ? extract_string(c) : extract_primitive(c);
+}
+
+void paraselistjson(const char *input, char ***items, int *count, const char *element) {
+    if (!input || !items || !count) return;
+    *items = NULL; *count = 0;
+
+    const char *p   = input;
+    const char *end = input + strlen(input);
+    while (p < end && *p != '{') p++;
+    if (p >= end) return;
+
+    Cursor c = { p, end };
+    StrVec out; sv_init(&out);
+    nav_collect(c, (element && element[0]) ? element : "", &out);
+    if (out.oom) { sv_free(&out); return; }
+    *items = out.data;
+    *count = out.len;
 }
