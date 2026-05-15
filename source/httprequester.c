@@ -18,7 +18,7 @@ void getlist(char* *response){
 	httpcAddRequestHeaderField(&context, "Content-Type", "application/json");
 	httpcAddRequestHeaderField(&context, "Accept", "application/json");
 	httpcSetSSLOpt(&context, SSLCOPT_DisableVerify);
-	const char *body = "{\"query\": \"query($userId:Int){MediaListCollection(userId:$userId,type:ANIME,status:CURRENT){lists{entries{media{title{romaji}episodes }progress}}}}\",\"variables\": {\"userId\": 6309041}}";
+	const char *body = "{\"query\": \"query($userId:Int){MediaListCollection(userId:$userId,type:ANIME,status:COMPLETED){lists{entries{media{title{romaji}episodes }progress}}}}\",\"variables\": {\"userId\": 6309041}}";
 	httpcAddPostDataRaw(&context, (u32 *)body, strlen(body));
 	ret = httpcBeginRequest(&context);
 	if (R_FAILED(ret)) {
