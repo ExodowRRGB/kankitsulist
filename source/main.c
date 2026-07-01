@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jsonparser.h"
+#include "parser.h"
 #include "httprequester.h"
 #include <citro2d.h>
 #include "ui.h"
@@ -14,9 +14,9 @@ int main() {
 UiInit();
 
 while (aptMainLoop()) {
-//  hidScanInput();	
 
-//if (hidKeysDown() & KEY_START) break;
+
+if (ShouldExitflag == 1) break;
 
 UiInputHandler();
 
@@ -24,7 +24,6 @@ UiInputHandler();
 		
 UiRenderBottom();
   }
-    // Cleanup
     exitNetwork();
     romfsExit();
     C2D_Fini();

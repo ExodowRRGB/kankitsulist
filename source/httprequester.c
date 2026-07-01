@@ -7,6 +7,7 @@
 
 #define SOC_BUFFERSIZE 0x100000
 static u32 *socBuffer;
+char *body;
 
 typedef struct {
     char  *data;
@@ -42,7 +43,7 @@ void exitNetwork() {
     acExit();
 }
 
-void getlist(char **response) {
+void getlist(char **response, int MenuSelection) {
     
 
     //printf("Network ready!\n");
@@ -60,8 +61,22 @@ void getlist(char **response) {
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "Accept: application/json");
     headers = curl_slist_append(headers, "Authorization: Bearer API_KEY_PLACEHOLDER");
-   const char *body = "{\"query\":\"query($userId:Int){MediaListCollection(userId:$userId,type:ANIME,status:COMPLETED){lists{entries{media{title{romaji}episodes}progress}}}}\",\"variables\":{\"userId\":6309041}}";
- curl_easy_setopt(curl, CURLOPT_URL, "https://graphql.anilist.co/");
+  
+  
+    switch (MenuSelection)
+  {  
+    case 0:
+    {
+    body = "{\"query\":\"query($userId:Int){MediaListCollection(userId:$userId,type:ANIME,status:COMPLETED){lists{entries{media{title{romaji}episodes}progress}}}}\",\"variables\":{\"userId\":6309041}}";
+    break;
+    }
+    case 1:
+    {
+    body = "{\"query\":\"query($userId:Int){MediaListCollection(userId:$userId,type:ANIME,status:CURRENT ){lists{entries{media{title{romaji}episodes}progress}}}}\",\"variables\":{\"userId\":6309041}}";
+    break;
+    }
+}
+    curl_easy_setopt(curl, CURLOPT_URL, "https://graphql.anilist.co/");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(body));

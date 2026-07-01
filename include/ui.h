@@ -1,6 +1,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+extern int ShouldExitflag;
+
 
 void UiInit();
 void UiRenderTop();

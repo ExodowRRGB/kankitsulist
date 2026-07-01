@@ -31,6 +31,7 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
+APP_AUTHOR  := Exodow_RGB 
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source

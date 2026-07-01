@@ -2,7 +2,7 @@
 extern "C" {
 #endif
 
-void getlist(char* *response);
+void getlist(char* *response,  int MenuSelection);
 void initNetwork();
 void exitNetwork();
 
