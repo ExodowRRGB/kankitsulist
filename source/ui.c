@@ -4,9 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ui.h"
-#include "parser.h"
+#include "jsonparser.h"
 #include "httprequester.h"
-float x = 0,y = 0;
+#include "paraser.h"
+float y = 0;
  C3D_RenderTarget* top;
  C3D_RenderTarget* bottom;
  C2D_Font font;
@@ -22,72 +23,40 @@ u32 held;
 u32 red;
         u32 kDown;
 int ShouldExitflag = 0;
-C2D_Image img ;
-C2D_SpriteSheet sheet;
-int superi ; // sync i form toprend and botrend
-
-
 int MenuSelection = 0;
 
 
 
 
-int getstringsize(char *string){
-int size;
-for(int i = 0; string[i] != '\0';i++) size++;
-return size;
-}
-
-
-
-
-
-
-void Slicer(char **  , char **){
-
-
-}
 
 
 void RetriveList(){
-getlist(&reqretrun, MenuSelection);	
-paraselistjson(reqretrun, &items, &count, "data.MediaListCollection.lists.entries");
- filtereditems = malloc(count * sizeof(char*));
-for (int i = 0 ;i < count ;i++){
-parasejson(items[i], &out, "media.title.romaji");
-filtereditems[i] = strdup(out);
-}
+  getlist(&reqretrun, MenuSelection);	
+  paraselistjson(reqretrun, &items, &count, "data.MediaListCollection.lists.entries");
+  filtereditems = malloc(count * sizeof(char*));
+  for (int i = 0 ;i < count ;i++){
+    parasejson(items[i], &out, "media.title.romaji");
+    filtereditems[i] = strdup(out);
+  }
 }
 
 
 void UiInit(){
-RetriveList();
+  RetriveList();
+  gfxInitDefault();
+  C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+  C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+  C2D_Prepare();
+  font = C2D_FontLoadSystem(CFG_REGION_USA);
+  textBuf = C2D_TextBufNew(4096);
 
 
- 
+  top    = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+  bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
-
-
-gfxInitDefault();
-    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
-    C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
-     font = C2D_FontLoadSystem(CFG_REGION_USA);
- textBuf = C2D_TextBufNew(4096);
-    C2D_Prepare();
- top    = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-    bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
-
-
-   
-      
-          
-           
- white = C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF);
+//色           
+  white = C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF);
   red = C2D_Color32(0xFF, 0x00, 0x00, 0xFF);
-
-
-
- 
 
 }
 
@@ -101,12 +70,9 @@ kDown = hidKeysDown();
     if (kDown & KEY_START) ShouldExitflag =1;
     if (kDown & KEY_DOWN && y < count*20 - 200) y += 20;
     if (kDown & KEY_UP  && y > 0)  y -= 20;
-    if (held & KEY_RIGHT) x += 10;
-    if (held & KEY_LEFT)  x -= 10;
     if (held & KEY_L) {
       MenuSelection = 1;
       RetriveList();
-
     }
      if (held & KEY_R) {
       MenuSelection = 0;
@@ -116,60 +82,45 @@ kDown = hidKeysDown();
   }
 
 
-
+char tmpbuffer[100][100];
 void UiRenderTop(){
-     int i ;
-        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+  C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 
-        // Draw on top screen
-        C2D_TargetClear(top, C2D_Color32(0x1A, 0x1A, 0x2E, 0xFF));
-        C2D_SceneBegin(top);
-        // --- your draw calls here ---
-		C2D_TextBufClear(textBuf);
+  // Draw on top screen
+  C2D_TargetClear(top, C2D_Color32(0x1A, 0x1A, 0x2E, 0xFF));
+  C2D_SceneBegin(top);
+  // --- your draw calls here ---
+	C2D_TextBufClear(textBuf);
 		
 
 if (MenuSelection == 1){
-    C2D_TextFontParse(&txt, font, textBuf, "Watching:");
-		C2D_TextOptimize(&txt);
-		C2D_DrawText(&txt, C2D_WithColor, 0,  0  , 0, 1.0f,1.0f , red);
-} else {
-   C2D_TextFontParse(&txt, font, textBuf, "Completed:");
-		C2D_TextOptimize(&txt);
-		C2D_DrawText(&txt, C2D_WithColor, 0,  0  , 0, 1.0f,1.0f , red);
+  C2D_TextFontParse(&txt, font, textBuf, "Watching:");
+} else  {
+  C2D_TextFontParse(&txt, font, textBuf, "Completed:");
 }
-
-		for ( i = y/20 ;i < y/20 + 10 ;i++){
-    
-
-C2D_TextFontParse(&txt, font, textBuf, filtereditems[i]);
+C2D_TextOptimize(&txt);
+C2D_DrawText(&txt, C2D_WithColor, 0,  0  , 0, 1.0f,1.0f , red);
+for(int j = 0;j < textchoper(filtereditems[23], 27, tmpbuffer);j++){
+C2D_TextFontParse(&txt, font, textBuf, tmpbuffer[j]);
+C2D_TextOptimize(&txt);
+C2D_DrawText(&txt, C2D_WithColor, 0,  30 + ((j + i) * 20) , 0, 0.8f,0.8f , white);
+}
+	/*for ( i = y/20 ;i < y/20 + 10 ;i++){
+    C2D_TextFontParse(&txt, font, textBuf, filtereditems[i]);
 		C2D_TextOptimize(&txt);
 		C2D_DrawText(&txt, C2D_WithColor, 0,  i * 20 - y + 30  , 0, 0.8f,0.8f , white);
-
-/*parasejson(items[i], &out, "progress");
-C2D_TextFontParse(&txt, font, textBuf, out);
-		C2D_TextOptimize(&txt);
-		C2D_DrawText(&txt, C2D_WithColor, 250 - x,  i * 20 + y, 0, 1.0f,1.0f , white);
-parasejson(items[i], &out, "media.episodes");
-C2D_TextFontParse(&txt, font, textBuf, out);
-		C2D_TextOptimize(&txt);
-		C2D_DrawText(&txt, C2D_WithColor, 280 -x,  i * 20 + y, 0, 1.0f,1.0f , white);*/
-
-
-}
-
+  }*/
 
 }
 
 
 void UiRenderBottom(){
-   
-    
-        // Draw on bottom screen
-        C2D_TargetClear(bottom, C2D_Color32(0x1A, 0x1A, 0x2E, 0xFF));
-        C2D_SceneBegin(bottom);
-        // --- your draw calls here ---
-       
-        C3D_FrameEnd(0);
+  C2D_TargetClear(bottom, C2D_Color32(0x1A, 0x1A, 0x2E, 0xFF));
+  C2D_SceneBegin(bottom);
+//此処から
+
+//此処まで
+  C3D_FrameEnd(0);
     
 }
 
@@ -179,3 +130,4 @@ void UiRenderBottom(){
 void UiCleanup(){
    
 }
+

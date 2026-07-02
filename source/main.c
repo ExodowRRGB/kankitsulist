@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.h"
 #include "httprequester.h"
 #include <citro2d.h>
 #include "ui.h"
