@@ -21,6 +21,7 @@ int count = 0;
 u32 white;
 u32 held;
 u32 red;
+u32 blue;
         u32 kDown;
 int ShouldExitflag = 0;
 int MenuSelection = 0;
@@ -57,7 +58,7 @@ void UiInit(){
 //色           
   white = C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF);
   red = C2D_Color32(0xFF, 0x00, 0x00, 0xFF);
-
+  blue = C2D_Color32(0x00, 0x00, 0xFF, 0xFF);
 }
 
 
@@ -96,15 +97,41 @@ void UiRenderTop(){
 if (MenuSelection == 1){
   C2D_TextFontParse(&txt, font, textBuf, "Watching:");
 } else  {
-  C2D_TextFontParse(&txt, font, textBuf, "Completed:");
+  C2D_TextFontParse(&txt, font, textBuf, "Completed:笑");
 }
 C2D_TextOptimize(&txt);
 C2D_DrawText(&txt, C2D_WithColor, 0,  0  , 0, 1.0f,1.0f , red);
-for(int j = 0;j < textchoper(filtereditems[23], 27, tmpbuffer);j++){
+
+
+int k = 0;
+for(int i = 20; i < 40;i++){
+int linestokaku = textchoper(filtereditems[i], 25, tmpbuffer);
+C2D_DrawRectangle(10, 30 + k * 20 -y , 0, 330,linestokaku  * 20,
+                   blue, blue,
+                   red, red);
+for(int j = 0;j < linestokaku;j++){
 C2D_TextFontParse(&txt, font, textBuf, tmpbuffer[j]);
 C2D_TextOptimize(&txt);
-C2D_DrawText(&txt, C2D_WithColor, 0,  30 + ((j + i) * 20) , 0, 0.8f,0.8f , white);
+C2D_DrawText(&txt, C2D_WithColor, 10,  30 + (k* 20) - y , 0, 0.8f,0.8f , white);
+k++;
 }
+k ++;
+}
+
+
+/*int k = 0;
+for (int i = 0 ;i < 10 ;i++){
+C2D_DrawRectangle(10, 30 + i * 60, 0, 300, 30,
+                   blue, blue,
+                   red, red);
+for(int j = 0;j < textchoper(filtereditems[i], 27, tmpbuffer);j++){
+C2D_TextFontParse(&txt, font, textBuf, tmpbuffer[j]);
+C2D_TextOptimize(&txt);
+C2D_DrawText(&txt, C2D_WithColor, 10,  30 + (k* 20) - y , 0, 0.8f,0.8f , white);
+k++;
+}
+k++;
+}*/
 	/*for ( i = y/20 ;i < y/20 + 10 ;i++){
     C2D_TextFontParse(&txt, font, textBuf, filtereditems[i]);
 		C2D_TextOptimize(&txt);
