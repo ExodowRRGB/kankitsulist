@@ -28,7 +28,7 @@ int textchoper(const char *inputstring, int screenw, char ouputstring[100][100])
 	char wordsepstr[100][100];
 	int numofword = wordsepstrer(inputstring,wordsepstr);
 	int linenum;
-	if((strlen(inputstring) - numofword) % screenw == 0){linenum = (strlen(inputstring) - numofword) / screenw;}else{linenum = ((strlen(inputstring) - numofword) / screenw) + 1;}
+	if((strlen(inputstring) - numofword) % screenw == 0){linenum = (strlen(inputstring) - numofword) / screenw;}else{linenum = ((strlen(inputstring) - numofword) / screenw) +1;}
 	k = 0;
 	int h = 0;
 	int writtensize = 0;

@@ -5,30 +5,24 @@
 #include "httprequester.h"
 #include <citro2d.h>
 #include "ui.h"
+#include "storage.h"
 
 int main() {
- romfsInit();
+  romfsInit();
 	initNetwork();
+  UiInit();
 
-UiInit();
-
-while (aptMainLoop()) {
-
-
-if (ShouldExitflag == 1) break;
-
-UiInputHandler();
-
-  UiRenderTop();
-		
-UiRenderBottom();
+  while (aptMainLoop()) {
+    if (ShouldExitflag == 1) break;
+    UiInputHandler();
+    UiRenderTop();
+	  UiRenderBottom();
   }
-    exitNetwork();
-    romfsExit();
-    C2D_Fini();
-    C3D_Fini();
-    gfxExit();
-    return 0;
+
+  exitNetwork();
+  romfsExit();
+  UiCleanup();
+  return 0;
 
 }
 

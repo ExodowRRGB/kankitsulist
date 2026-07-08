@@ -4,6 +4,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <curl/curl.h>
+#include "storage.h"
 
 #define SOC_BUFFERSIZE 0x100000
 static u32 *socBuffer;
@@ -45,7 +46,7 @@ void exitNetwork() {
 
 void getlist(char **response, int MenuSelection) {
     
-
+GetToken();
     //printf("Network ready!\n");
 
     CURL *curl = curl_easy_init();
@@ -60,7 +61,10 @@ void getlist(char **response, int MenuSelection) {
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "Accept: application/json");
-    headers = curl_slist_append(headers, "Authorization: Bearer API_KEY_PLACEHOLDER");
+    char AuthHeadert[1107];
+    snprintf(AuthHeadert, 1107, "Authorization: Bearer %s", anilisttoken);
+
+    headers = curl_slist_append(headers, AuthHeadert);
   
   
     switch (MenuSelection)
