@@ -34,7 +34,7 @@ include $(DEVKITARM)/3ds_rules
 APP_AUTHOR  := Exodow_RGB 
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	source source/ui
 DATA		:=	data
 INCLUDES	:=	include
 GRAPHICS	:=	gfx

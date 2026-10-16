@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <curl/curl.h>
 #include "storage.h"
+#include "ui.h"
 
 #define SOC_BUFFERSIZE 0x100000
 static u32 *socBuffer;
@@ -44,9 +45,9 @@ void exitNetwork() {
     acExit();
 }
 
-void getlist(char **response, int MenuSelection) {
+void getlist(char **response, int Catgory) {
     
-GetToken();
+
     //printf("Network ready!\n");
 
     CURL *curl = curl_easy_init();
@@ -67,7 +68,7 @@ GetToken();
     headers = curl_slist_append(headers, AuthHeadert);
   
   
-    switch (MenuSelection)
+    switch (Catgory)
   {  
     case 0:
     {
@@ -87,8 +88,8 @@ GetToken();
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
     curl_easy_setopt(curl, CURLOPT_CAINFO, "romfs:/cacert.pem");
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
   CURLcode res = curl_easy_perform(curl);
    curl_slist_free_all(headers);
@@ -100,7 +101,6 @@ if (res != CURLE_OK) {
     *response = NULL;}else {
     printf("Status OK, got %zu bytes\n", buf.size);
     *response = buf.data;
-
 }
 
     

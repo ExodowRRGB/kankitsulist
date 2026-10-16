@@ -8,8 +8,16 @@
 #include "storage.h"
 
 int main() {
+    freopen("sdmc:/kankitsu_log.txt", "w", stdout);
+    freopen("sdmc:/kankitsu_log.txt", "w", stderr);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    printf("Started ig hahahahah\n");
+
+
   romfsInit();
 	initNetwork();
+  GetToken();
   UiInit();
 
   while (aptMainLoop()) {
@@ -17,6 +25,7 @@ int main() {
     UiInputHandler();
     UiRenderTop();
 	  UiRenderBottom();
+  
   }
 
   exitNetwork();
